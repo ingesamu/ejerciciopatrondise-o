@@ -1,0 +1,158 @@
+using System;
+using System.Collections.Generic;
+
+// Interfaz Strategy
+public interface ISortStrategy
+{
+    List<int> Sort(List<int> data);
+}
+
+// Estrategia 1: Bubble Sort
+public class BubbleSortStrategy : ISortStrategy
+{
+    public List<int> Sort(List<int> data)
+    {
+        Console.WriteLine("Sorting using Bubble Sort");
+        for (int i = 0; i < data.Count - 1; i++)
+        {
+            for (int j = 0; j < data.Count - i - 1; j++)
+            {
+                if (data[j] > data[j + 1])
+                {
+                    int temp = data[j];
+                    data[j] = data[j + 1];
+                    data[j + 1] = temp;
+                }
+            }
+        }
+        return data;
+    }
+}
+
+// Estrategia 2: Quick Sort
+public class QuickSortStrategy : ISortStrategy
+{
+    public List<int> Sort(List<int> data)
+    {
+        Console.WriteLine("Sorting using Quick Sort");
+        if (data.Count <= 1)
+            return data;
+
+        int pivot = data[data.Count / 2];
+        List<int> left = data.FindAll(x => x < pivot);
+        List<int> right = data.FindAll(x => x > pivot);
+        
+        List<int> sorted = Sort(left);
+        sorted.AddRange(data.FindAll(x => x == pivot));
+        sorted.AddRange(Sort(right));
+
+        return sorted;
+    }
+}
+
+// Estrategia 3: Merge Sort
+public class MergeSortStrategy : ISortStrategy
+{
+    public List<int> Sort(List<int> data)
+    {
+        Console.WriteLine("Sorting using Merge Sort");
+        if (data.Count <= 1)
+            return data;
+
+        int middle = data.Count / 2;
+        List<int> left = data.GetRange(0, middle);
+        List<int> right = data.GetRange(middle, data.Count - middle);
+
+        left = Sort(left);
+        right = Sort(right);
+
+        return Merge(left, right);
+    }
+
+    private List<int> Merge(List<int> left, List<int> right)
+    {
+        List<int> result = new List<int>();
+        while (left.Count > 0 && right.Count > 0)
+        {
+            if (left[0] <= right[0])
+            {
+                result.Add(left[0]);
+                left.RemoveAt(0);
+            }
+            else
+            {
+                result.Add(right[0]);
+                right.RemoveAt(0);
+            }
+        }
+
+        result.AddRange(left);
+        result.AddRange(right);
+
+        return result;
+    }
+}
+
+// Contexto que usa la estrategia
+public class SortContext
+{
+    private ISortStrategy _strategy;
+
+    public SortContext(ISortStrategy strategy)
+    {
+        _strategy = strategy;
+    }
+
+    public void SetStrategy(ISortStrategy strategy)
+    {
+        _strategy = strategy;
+    }
+
+    public void SortData(List<int> data)
+    {
+        if (IsSorted(data))
+        {
+            Console.WriteLine("The data is already sorted.");
+            return;
+        }
+
+        var sortedData = _strategy.Sort(data);
+        Console.WriteLine("Sorted Data: " + string.Join(", ", sortedData));
+    }
+
+    private bool IsSorted(List<int> data)
+    {
+        for (int i = 1; i < data.Count; i++)
+        {
+            if (data[i - 1] > data[i])
+                return false;
+        }
+        return true;
+    }
+}
+
+// Clase Principal
+class Program
+{
+    static void Main(string[] args)
+    {
+        List<int> data = new List<int> { 34, 7, 23, 32, 5, 62 };
+
+        // Usando Bubble Sort
+        SortContext context = new SortContext(new BubbleSortStrategy());
+        context.SortData(new List<int>(data));
+
+        // Cambiando a Quick Sort
+        context.SetStrategy(new QuickSortStrategy());
+        context.SortData(new List<int>(data));
+
+        // Cambiando a Merge Sort
+        context.SetStrategy(new MergeSortStrategy());
+        context.SortData(new List<int>(data));
+
+        // Intentando ordenar una lista ya ordenada
+        context.SortData(new List<int> { 1, 2, 3, 4, 5 });
+
+        Console.ReadLine();
+    }
+}
